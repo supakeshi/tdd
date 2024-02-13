@@ -56,3 +56,14 @@ class CounterTest(TestCase):
         self.assertEqual(resultRead.json['fuga'], 0)
         badResult = self.client.get('/counters/doesnotexist')
         self.assertEqual(badResult.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_a_counter(self):
+        """It should delete a counter"""
+        resultCreate = self.client.post('/counters/piyo')
+        self.assertEqual(resultCreate.status_code, status.HTTP_201_CREATED)
+        resultDelete = self.client.delete('/counters/piyo')
+        self.assertEqual(resultDelete.status_code, status.HTTP_204_NO_CONTENT)
+        resultRead = self.client.get('/counters/piyo')
+        self.assertEqual(resultRead.status_code, status.HTTP_404_NOT_FOUND)
+        resultDelete = self.client.delete('/counters/piyo')
+        self.assertEqual(resultDelete.status_code, status.HTTP_404_NOT_FOUND)        
