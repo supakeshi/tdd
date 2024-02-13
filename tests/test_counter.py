@@ -10,3 +10,49 @@ how to call the web service and assert what it should return.
 - The service must be able to update a counter by name.
 - The service must be able to read the counter
 """
+from unittest import TestCase
+
+# we need to import the unit under test - counter
+from src.counter import app 
+
+# we need to import the file that contains the status codes
+from src import status 
+
+class CounterTest(TestCase):
+    """Counter tests"""
+    
+    def setUp(self):
+        self.client = app.test_client()
+    
+    def test_create_a_counter(self):
+        """It should create a counter"""
+        client = app.test_client()
+        result = client.post('/counters/foo')
+        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+    
+    def test_duplicate_a_counter(self):
+        """It should return an error for duplicates"""
+        result = self.client.post('/counters/bar')
+        self.assertEqual(result.status_code, status.HTTP_201_CREATED)
+        result = self.client.post('/counters/bar')
+        self.assertEqual(result.status_code, status.HTTP_409_CONFLICT)
+  
+    def test_update_a_counter(self):
+        """It should update a counter"""
+        resultCreate = self.client.post('/counters/hoge')                       # Step 1
+        self.assertEqual(resultCreate.status_code, status.HTTP_201_CREATED)     # Step 2
+        baseValue = resultCreate.json['hoge']                                   # Step 3
+        resultUpdate = self.client.put('/counters/hoge')                        # Step 4
+        self.assertEqual(resultUpdate.status_code, status.HTTP_200_OK)          # Step 5
+        updatedValue = resultUpdate.json['hoge']
+        self.assertEqual(updatedValue, baseValue + 1)                           # Step 6
+
+    def test_read_a_counter(self):
+        """It should read a counter"""
+        resultCreate = self.client.post('/counters/fuga')
+        self.assertEqual(resultCreate.status_code, status.HTTP_201_CREATED)
+        resultRead = self.client.get('/counters/fuga')
+        self.assertEqual(resultRead.status_code, status.HTTP_200_OK)
+        self.assertEqual(resultRead.json['fuga'], 0)
+        badResult = self.client.get('/counters/doesnotexist')
+        self.assertEqual(badResult.status_code, status.HTTP_404_NOT_FOUND)
